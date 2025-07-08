@@ -48,9 +48,11 @@
                       EDIT
                     </router-link>
                     <button
+                      @click="handleDelete(user.id)"
+                      :disabled="isPending"
                       class="btn btn-sm btn-danger rounded-4 shadow-sm border-0"
                     >
-                      DELETE
+                      {{ isPending ? 'DELETING...' : 'DELETE' }}
                     </button>
                   </td>
                 </tr>
@@ -64,9 +66,26 @@
 </template>
 
 <script setup lang="ts">
+import { useQueryClient } from '@tanstack/vue-query'
 import { useUsers } from '../../../composables/user/useUsers'
+import { useUserDelete } from '../../../composables/user/useUserDelete'
 import SidebarMenu from '../../../components/SidebarMenu.vue'
+
+const queryClient = useQueryClient()
+
 const { data: users, isLoading, isError, error } = useUsers()
+
+const { mutate, isPending } = useUserDelete()
+
+const handleDelete = (id: number) => {
+  if (confirm('Are you sure you want to delete this user?')) {
+    mutate(id, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['users'] })
+      },
+    })
+  }
+}
 </script>
 
 <style scoped></style>
